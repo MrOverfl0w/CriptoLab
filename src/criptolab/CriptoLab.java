@@ -16,6 +16,8 @@ public class CriptoLab {
      */
     public static void main(String[] args) {
         // TODO code application logic here
+        KeyGenerator kg = new KeyGenerator();
+        kg.generateKeyPair();
     }
     
 }

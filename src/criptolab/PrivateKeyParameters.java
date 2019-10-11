@@ -18,9 +18,6 @@ import org.bouncycastle.pqc.math.linearalgebra.PolynomialRingGF2m;
  * @author Alber
  */
 public class PrivateKeyParameters extends McElieceKeyParameters{
-    
-    // the OID of the algorithm
-    private String oid;
 
     // the length of the code
     private int n;

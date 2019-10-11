@@ -12,25 +12,17 @@ import org.bouncycastle.crypto.CryptoServicesRegistrar;
 import org.bouncycastle.crypto.KeyGenerationParameters;
 import org.bouncycastle.pqc.crypto.mceliece.McElieceKeyGenerationParameters;
 import org.bouncycastle.pqc.crypto.mceliece.McElieceParameters;
-import org.bouncycastle.pqc.crypto.mceliece.McEliecePrivateKeyParameters;
-import org.bouncycastle.pqc.crypto.mceliece.McEliecePublicKeyParameters;
 import org.bouncycastle.pqc.math.linearalgebra.GF2Matrix;
 import org.bouncycastle.pqc.math.linearalgebra.GF2mField;
 import org.bouncycastle.pqc.math.linearalgebra.GoppaCode;
 import org.bouncycastle.pqc.math.linearalgebra.Permutation;
 import org.bouncycastle.pqc.math.linearalgebra.PolynomialGF2mSmallM;
-import org.bouncycastle.pqc.math.linearalgebra.PolynomialRingGF2m;
 
 /**
  *
  * @author Alber
  */
-public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
-    
-    /**
-     * The OID of the algorithm.
-     */
-    private static final String OID = "1.3.6.1.4.1.8301.3.1.3.4.1";
+public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
 
     private McElieceKeyGenerationParameters mcElieceParams;
 
@@ -52,24 +44,20 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
     // flag indicating whether the key pair generator has been initialized
     private boolean initialized = false;
 
-
     /**
      * Default initialization of the key pair generator.
      */
-    private void initializeDefault()
-    {
+    private void initializeDefault() {
         McElieceKeyGenerationParameters mcParams = new McElieceKeyGenerationParameters(CryptoServicesRegistrar.getSecureRandom(), new McElieceParameters());
         initialize(mcParams);
     }
 
-    private void initialize(KeyGenerationParameters param)
-    {
-        this.mcElieceParams = (McElieceKeyGenerationParameters)param;
+    private void initialize(KeyGenerationParameters param) {
+        this.mcElieceParams = (McElieceKeyGenerationParameters) param;
 
         // set source of randomness
         this.random = param.getRandom();
-        if (this.random == null)
-        {
+        if (this.random == null) {
             this.random = CryptoServicesRegistrar.getSecureRandom();
         }
 
@@ -80,12 +68,9 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
         this.initialized = true;
     }
 
+    private AsymmetricCipherKeyPair genKeyPair() {
 
-    private AsymmetricCipherKeyPair genKeyPair()
-    {
-
-        if (!initialized)
-        {
+        if (!initialized) {
             initializeDefault();
         }
 
@@ -94,7 +79,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
 
         // Se genera un polinomio irreducible sobre el campo (polinomio de Goppa)
         PolynomialGF2mSmallM gp = new PolynomialGF2mSmallM(field, t,
-            PolynomialGF2mSmallM.RANDOM_IRREDUCIBLE_POLYNOMIAL, random);
+                PolynomialGF2mSmallM.RANDOM_IRREDUCIBLE_POLYNOMIAL, random);
 
         // Se obtiene la matriz de control del código de Goppa
         GF2Matrix h = createCanonicalCheckMatrix(field, gp);
@@ -104,7 +89,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
         GF2Matrix shortH = mmp.getSecondMatrix();
 
         // compute short systematic form of generator matrix
-        GF2Matrix shortG = (GF2Matrix)shortH.computeTranspose();
+        GF2Matrix shortG = (GF2Matrix) shortH.computeTranspose();
 
         // extend to full systematic form
         GF2Matrix gPrime = shortG.extendLeftCompactForm();
@@ -114,15 +99,14 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
 
         // generate random invertible (k x k)-matrix S and its inverse S^-1
         GF2Matrix[] S = GF2Matrix
-            .createRandomRegularMatrixAndItsInverse(k, random);
+                .createRandomRegularMatrixAndItsInverse(k, random);
 
         // generate random permutation P
         Permutation P = new Permutation(n, random);
 
         // compute public matrix G=S*G'*P
         GF2Matrix G = (GF2Matrix) S[0].rightMultiply(gPrime);
-        G = (GF2Matrix)G.rightMultiply(P);
-
+        G = (GF2Matrix) G.rightMultiply(P);
 
         // generate keys
         PublicKeyParameters pubKey = new PublicKeyParameters(n, t, G);
@@ -133,85 +117,92 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
     }
 
     @Override
-    public void init(KeyGenerationParameters param)
-    {
+    public void init(KeyGenerationParameters param) {
         this.initialize(param);
     }
 
     @Override
-    public AsymmetricCipherKeyPair generateKeyPair()
-    {
+    public AsymmetricCipherKeyPair generateKeyPair() {
         return genKeyPair();
     }
-    
-    
-    
-    
+
     /**
      * Construct the check matrix of a Goppa code in canonical form from the
      * irreducible Goppa polynomial over the finite field
      * <tt>GF(2<sup>m</sup>)</tt>.
      *
      * @param field the finite field
-     * @param gp    the irreducible Goppa polynomial
+     * @param gp the irreducible Goppa polynomial
      */
     public static GF2Matrix createCanonicalCheckMatrix(GF2mField field,
-                                                       PolynomialGF2mSmallM gp)
-    {
+            PolynomialGF2mSmallM gp) {
         int m = field.getDegree();
         int n = 1 << m;
         int t = gp.getDegree();
 
         /* create matrix H over GF(2^m) */
-
         int[][] hArray = new int[t][n];
 
-        // create matrix YZ
-        int[][] yz = new int[t][n];
-        for (int j = 0; j < n; j++)
-        {
-            // here j is used as index and as element of field GF(2^m)
-            yz[0][j] = field.inverse(gp.evaluateAt(j));
-        }
+        int[][] c = new int[t][t];
+        int[][] x = new int[t][n];
+        int[][] y = new int[n][n];
 
-        for (int i = 1; i < t; i++)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                // here j is used as index and as element of field GF(2^m)
-                yz[i][j] = field.mult(yz[i - 1][j], j);
+        // Crear C
+        for (int i = 0; i < t; i++) {
+            int k = 0;
+            for (int j = i; j < t; j++) {
+                c[i][j] = field.add(0, -gp.getCoefficient(t - k));
+                k++;
             }
         }
 
-        // create matrix H = XYZ
-        for (int i = 0; i < t; i++)
-        {
-            for (int j = 0; j < n; j++)
-            {
-                for (int k = 0; k <= i; k++)
-                {
-                    hArray[i][j] = field.add(hArray[i][j], field.mult(yz[k][j],
-                        gp.getCoefficient(t + k - i)));
+        //Crear X
+        for (int i = 0; i < t; i++) {
+            for (int j = 0; j < n; j++) {
+                x[i][j] = field.exp(gp.getCoefficient(j + 1), t - (i + 1));
+            }
+        }
+
+        //Crear Y
+        for (int i = 0; i < n; i++) {
+            y[i][i] = field.inverse(gp.evaluateAt(i));
+        }
+
+        // C*X
+        int[][] cx = new int[t][n];
+
+        for (int i = 0; i < t; i++) {
+            for (int j = 0; j < n; j++) {
+                int k = 0;
+                for (int z = 0; z < t; z++) {
+                    k = field.add(k, field.mult(c[i][z], x[z][j]));
                 }
+                cx[i][j] = k;
+            }
+        }
+
+        // H = C * X * Y
+        for (int i = 0; i < t; i++) {
+            for (int j = 0; j < n; j++) {
+                int k = 0;
+                for (int z = 0; z < n; z++) {
+                    k = field.add(k, field.mult(cx[i][z], y[z][j]));
+                }
+                hArray[i][j] = k;
             }
         }
 
         /* convert to matrix over GF(2) */
-
         int[][] result = new int[t * m][(n + 31) >>> 5];
 
-        for (int j = 0; j < n; j++)
-        {
+        for (int j = 0; j < n; j++) {
             int q = j >>> 5;
             int r = 1 << (j & 0x1f);
-            for (int i = 0; i < t; i++)
-            {
+            for (int i = 0; i < t; i++) {
                 int e = hArray[i][j];
-                for (int u = 0; u < m; u++)
-                {
+                for (int u = 0; u < m; u++) {
                     int b = (e >>> u) & 1;
-                    if (b != 0)
-                    {
+                    if (b != 0) {
                         int ind = (i + 1) * m - u - 1;
                         result[ind][q] ^= r;
                     }
@@ -221,5 +212,5 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
 
         return new GF2Matrix(n, result);
     }
-    
+
 }
