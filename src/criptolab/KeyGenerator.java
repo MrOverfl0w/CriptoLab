@@ -62,8 +62,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
         initialize(mcParams);
     }
 
-    private void initialize(
-        KeyGenerationParameters param)
+    private void initialize(KeyGenerationParameters param)
     {
         this.mcElieceParams = (McElieceKeyGenerationParameters)param;
 
@@ -90,24 +89,19 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
             initializeDefault();
         }
 
-        // finite field GF(2^m)
+        // Se define el campo GF(2^m)
         GF2mField field = new GF2mField(m, fieldPoly);
 
-        // irreducible Goppa polynomial
+        // Se genera un polinomio irreducible sobre el campo (polinomio de Goppa)
         PolynomialGF2mSmallM gp = new PolynomialGF2mSmallM(field, t,
             PolynomialGF2mSmallM.RANDOM_IRREDUCIBLE_POLYNOMIAL, random);
-        PolynomialRingGF2m ring = new PolynomialRingGF2m(field, gp);
 
-        // matrix used to compute square roots in (GF(2^m))^t
-        PolynomialGF2mSmallM[] sqRootMatrix = ring.getSquareRootMatrix();
-
-        // generate canonical check matrix
-        GF2Matrix h = GoppaCode.createCanonicalCheckMatrix(field, gp);
+        // Se obtiene la matriz de control del código de Goppa
+        GF2Matrix h = createCanonicalCheckMatrix(field, gp);
 
         // compute short systematic form of check matrix
         GoppaCode.MaMaPe mmp = GoppaCode.computeSystematicForm(h, random);
         GF2Matrix shortH = mmp.getSecondMatrix();
-        Permutation p1 = mmp.getPermutation();
 
         // compute short systematic form of generator matrix
         GF2Matrix shortG = (GF2Matrix)shortH.computeTranspose();
@@ -115,37 +109,117 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator{
         // extend to full systematic form
         GF2Matrix gPrime = shortG.extendLeftCompactForm();
 
-        // obtain number of rows of G (= dimension of the code)
+        // obtain number of rows of G' (= dimension of the code)
         int k = shortG.getNumRows();
 
         // generate random invertible (k x k)-matrix S and its inverse S^-1
-        GF2Matrix[] matrixSandInverse = GF2Matrix
+        GF2Matrix[] S = GF2Matrix
             .createRandomRegularMatrixAndItsInverse(k, random);
 
-        // generate random permutation P2
-        Permutation p2 = new Permutation(n, random);
+        // generate random permutation P
+        Permutation P = new Permutation(n, random);
 
-        // compute public matrix G=S*G'*P2
-        GF2Matrix g = (GF2Matrix)matrixSandInverse[0].rightMultiply(gPrime);
-        g = (GF2Matrix)g.rightMultiply(p2);
+        // compute public matrix G=S*G'*P
+        GF2Matrix G = (GF2Matrix) S[0].rightMultiply(gPrime);
+        G = (GF2Matrix)G.rightMultiply(P);
 
 
         // generate keys
-        McEliecePublicKeyParameters pubKey = new McEliecePublicKeyParameters(n, t, g);
-        McEliecePrivateKeyParameters privKey = new McEliecePrivateKeyParameters(n, k, field, gp, p1, p2, matrixSandInverse[1]);
+        PublicKeyParameters pubKey = new PublicKeyParameters(n, t, G);
+        PrivateKeyParameters privKey = new PrivateKeyParameters(n, k, field, gp, P, S[1]);
 
         // return key pair
         return new AsymmetricCipherKeyPair(pubKey, privKey);
     }
 
+    @Override
     public void init(KeyGenerationParameters param)
     {
         this.initialize(param);
     }
 
+    @Override
     public AsymmetricCipherKeyPair generateKeyPair()
     {
         return genKeyPair();
+    }
+    
+    
+    
+    
+    /**
+     * Construct the check matrix of a Goppa code in canonical form from the
+     * irreducible Goppa polynomial over the finite field
+     * <tt>GF(2<sup>m</sup>)</tt>.
+     *
+     * @param field the finite field
+     * @param gp    the irreducible Goppa polynomial
+     */
+    public static GF2Matrix createCanonicalCheckMatrix(GF2mField field,
+                                                       PolynomialGF2mSmallM gp)
+    {
+        int m = field.getDegree();
+        int n = 1 << m;
+        int t = gp.getDegree();
+
+        /* create matrix H over GF(2^m) */
+
+        int[][] hArray = new int[t][n];
+
+        // create matrix YZ
+        int[][] yz = new int[t][n];
+        for (int j = 0; j < n; j++)
+        {
+            // here j is used as index and as element of field GF(2^m)
+            yz[0][j] = field.inverse(gp.evaluateAt(j));
+        }
+
+        for (int i = 1; i < t; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                // here j is used as index and as element of field GF(2^m)
+                yz[i][j] = field.mult(yz[i - 1][j], j);
+            }
+        }
+
+        // create matrix H = XYZ
+        for (int i = 0; i < t; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                for (int k = 0; k <= i; k++)
+                {
+                    hArray[i][j] = field.add(hArray[i][j], field.mult(yz[k][j],
+                        gp.getCoefficient(t + k - i)));
+                }
+            }
+        }
+
+        /* convert to matrix over GF(2) */
+
+        int[][] result = new int[t * m][(n + 31) >>> 5];
+
+        for (int j = 0; j < n; j++)
+        {
+            int q = j >>> 5;
+            int r = 1 << (j & 0x1f);
+            for (int i = 0; i < t; i++)
+            {
+                int e = hArray[i][j];
+                for (int u = 0; u < m; u++)
+                {
+                    int b = (e >>> u) & 1;
+                    if (b != 0)
+                    {
+                        int ind = (i + 1) * m - u - 1;
+                        result[ind][q] ^= r;
+                    }
+                }
+            }
+        }
+
+        return new GF2Matrix(n, result);
     }
     
 }
