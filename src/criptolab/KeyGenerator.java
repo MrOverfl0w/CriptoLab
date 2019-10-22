@@ -6,6 +6,7 @@
 package criptolab;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
 import org.bouncycastle.crypto.CryptoServicesRegistrar;
@@ -139,6 +140,11 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
         int m = field.getDegree();
         int n = 1 << m;
         int t = gp.getDegree();
+        int[] gamma = new int[n];
+        
+        for (int i = 0; i < n; i++){
+            gamma[i] = field.getRandomNonZeroElement();
+        }
 
         /* create matrix H over GF(2^m) */
         int[][] hArray = new int[t][n];
@@ -151,7 +157,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
         for (int i = 0; i < t; i++) {
             int k = 0;
             for (int j = i; j < t; j++) {
-                c[i][j] = field.add(0, -gp.getCoefficient(t - k));
+                c[i][j] = -gp.getCoefficient(t - k);
                 k++;
             }
         }
@@ -159,7 +165,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
         //Crear X
         for (int i = 0; i < t; i++) {
             for (int j = 0; j < n; j++) {
-                x[i][j] = field.exp(gp.getCoefficient(j + 1), t - (i + 1));
+                x[i][j] = field.exp(gamma[j], t - (i + 1));
             }
         }
 
