@@ -14,13 +14,13 @@ import org.bouncycastle.pqc.math.linearalgebra.GF2Matrix;
  */
 public class PublicKeyParameters extends McElieceKeyParameters{
     
-    // the length of the code
+    // longitud del código
     private int n;
 
-    // the error correction capability of the code
+    // Cantidad de errores que corrije el código
     private int t;
 
-    // the generator matrix
+    // Matriz G
     private GF2Matrix g;
     
     public PublicKeyParameters(int n, int t, GF2Matrix g){
@@ -28,6 +28,23 @@ public class PublicKeyParameters extends McElieceKeyParameters{
         this.n = n;
         this.t = t;
         this.g = new GF2Matrix(g);
+    }
+
+    int getN() {
+        return n;
+    }
+
+    //Dimensión del código
+    int getK() {
+        return g.getNumRows();
+    }
+
+    int getT() {
+        return t;
+    }
+
+    GF2Matrix getG() {
+        return g;
     }
     
 }

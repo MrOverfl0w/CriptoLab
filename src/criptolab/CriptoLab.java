@@ -5,6 +5,8 @@
  */
 package criptolab;
 
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+
 /**
  *
  * @author Alber
@@ -15,9 +17,18 @@ public class CriptoLab {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        // Generación de llaves
         KeyGenerator kg = new KeyGenerator();
-        kg.generateKeyPair();
+        AsymmetricCipherKeyPair keyPair = kg.generateKeyPair();
+        PublicKeyParameters publicKey = (PublicKeyParameters)keyPair.getPublic();
+        PrivateKeyParameters privKey = (PrivateKeyParameters)keyPair.getPrivate();
+        
+        byte[] plainMessage = new byte[1024];
+        
+        //Cifrado
+        Cipher cipher = new Cipher();
+        cipher.init(true, publicKey);
+        byte[] cipherMessage = cipher.messageEncrypt(plainMessage);
     }
     
 }

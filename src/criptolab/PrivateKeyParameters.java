@@ -62,5 +62,9 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
           // matrix used to compute square roots in (GF(2^m))^t
         this.qInv = ring.getSquareRootMatrix();
     }
+
+    int getN() {
+        return n;
+    }
     
 }
