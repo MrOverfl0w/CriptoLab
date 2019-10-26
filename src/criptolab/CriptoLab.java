@@ -5,6 +5,7 @@
  */
 package criptolab;
 
+import java.util.Arrays;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 
 /**
@@ -23,12 +24,13 @@ public class CriptoLab {
         PublicKeyParameters publicKey = (PublicKeyParameters)keyPair.getPublic();
         PrivateKeyParameters privKey = (PrivateKeyParameters)keyPair.getPrivate();
         
-        byte[] plainMessage = new byte[1024];
-        
+        byte[] plainMessage = new byte[187];
+        System.out.println("Plain Message: " + Arrays.toString(plainMessage));
         //Cifrado
         Cipher cipher = new Cipher();
         cipher.init(true, publicKey);
         byte[] cipherMessage = cipher.messageEncrypt(plainMessage);
+        System.out.println("Cipher Message: " + Arrays.toString(cipherMessage));
     }
     
 }
