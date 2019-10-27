@@ -118,12 +118,15 @@ public class Cipher implements MessageEncryptor{
         GF2Vector z = new GF2Vector(n, t, sr);
 
         GF2Matrix g = publicKey.getG();
+        //Multiplicar m y G
         Vector mG = g.leftMultiply(m);
+        //Sumar vector
         GF2Vector mGZ = (GF2Vector)mG.add(z);
 
         return mGZ.getEncoded();
     }
 
+    //Mensaje representado como un vector sobre el campo
     private GF2Vector computeMessageRepresentative(byte[] input)
     {
         byte[] data = new byte[maxPlainTextSize + ((k & 0x07) != 0 ? 1 : 0)];
