@@ -140,11 +140,6 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
         int m = field.getDegree();
         int n = 1 << m;
         int t = gp.getDegree();
-        int[] gamma = new int[n];
-        
-        for (int i = 0; i < n; i++){
-            gamma[i] = field.getRandomNonZeroElement();
-        }
 
         /* create matrix H over GF(2^m) */
         int[][] hArray = new int[t][n];
@@ -165,7 +160,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
         //Crear X
         for (int i = 0; i < t; i++) {
             for (int j = 0; j < n; j++) {
-                x[i][j] = field.exp(gamma[j], t - (i + 1));
+                x[i][j] = field.exp(j, t - (i + 1));
             }
         }
 

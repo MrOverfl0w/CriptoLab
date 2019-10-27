@@ -23,7 +23,7 @@ public class CriptoLab {
         PublicKeyParameters publicKey = (PublicKeyParameters)keyPair.getPublic();
         PrivateKeyParameters privKey = (PrivateKeyParameters)keyPair.getPrivate();
         
-        byte[] plainMessage = new byte[1024];
+        byte[] plainMessage = new byte[187];
         
         //Cifrado
         Cipher cipher = new Cipher();
