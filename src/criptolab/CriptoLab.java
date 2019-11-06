@@ -7,6 +7,7 @@ package criptolab;
 
 import java.util.Arrays;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 
 /**
  *
@@ -21,16 +22,29 @@ public class CriptoLab {
         // Generación de llaves
         KeyGenerator kg = new KeyGenerator();
         AsymmetricCipherKeyPair keyPair = kg.generateKeyPair();
-        PublicKeyParameters publicKey = (PublicKeyParameters)keyPair.getPublic();
-        PrivateKeyParameters privKey = (PrivateKeyParameters)keyPair.getPrivate();
-        
+        PublicKeyParameters publicKey = (PublicKeyParameters) keyPair.getPublic();
+        PrivateKeyParameters privKey = (PrivateKeyParameters) keyPair.getPrivate();
+
         byte[] plainMessage = new byte[187];
-        System.out.println("Plain Message: " + Arrays.toString(plainMessage));
+        //System.out.println("Plain Message: " + Arrays.toString(plainMessage));
         //Cifrado
         Cipher cipher = new Cipher();
         cipher.init(true, publicKey);
         byte[] cipherMessage = cipher.messageEncrypt(plainMessage);
-        System.out.println("Cipher Message: " + Arrays.toString(cipherMessage));
+        //System.out.println("Cipher Message: " + Arrays.toString(cipherMessage));
+
+        //Decifrado
+        try {
+            cipher.init(false, privKey);
+            byte[] decodedMessage = cipher.messageDecrypt(cipherMessage);
+            if (decodedMessage.equals(plainMessage)) {
+                System.out.println("Exito");
+            }else{
+                System.out.println("Yaper");
+            }
+        } catch (InvalidCipherTextException ex) {
+            ex.printStackTrace();
+        }
     }
-    
+
 }

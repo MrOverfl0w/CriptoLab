@@ -46,7 +46,7 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
     
     
     public PrivateKeyParameters(int n, int k, GF2mField field,
-                                        PolynomialGF2mSmallM gp, Permutation P, GF2Matrix sInv)
+                                        PolynomialGF2mSmallM gp, Permutation P, GF2Matrix sInv, GF2Matrix h)
     {
         super(true, null);
         this.k = k;
@@ -55,7 +55,7 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
         this.goppaPoly = gp;
         this.sInv = sInv;
         this.P = P;
-        this.h = GoppaCode.createCanonicalCheckMatrix(field, gp);
+        this.h = h;
 
         PolynomialRingGF2m ring = new PolynomialRingGF2m(field, gp);
 
@@ -66,5 +66,35 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
     int getN() {
         return n;
     }
+
+    public int getK() {
+        return k;
+    }
+
+    public GF2mField getField() {
+        return field;
+    }
+
+    public PolynomialGF2mSmallM getGoppaPoly() {
+        return goppaPoly;
+    }
+
+    public GF2Matrix getSInv() {
+        return sInv;
+    }
+
+    public Permutation getP() {
+        return P;
+    }
+
+    public GF2Matrix getH() {
+        return h;
+    }
+
+    public PolynomialGF2mSmallM[] getQInv() {
+        return qInv;
+    }
+    
+    
     
 }

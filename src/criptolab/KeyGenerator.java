@@ -6,7 +6,6 @@
 package criptolab;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPairGenerator;
 import org.bouncycastle.crypto.CryptoServicesRegistrar;
@@ -111,7 +110,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
 
         // generate keys
         PublicKeyParameters pubKey = new PublicKeyParameters(n, t, G);
-        PrivateKeyParameters privKey = new PrivateKeyParameters(n, k, field, gp, P, S[1]);
+        PrivateKeyParameters privKey = new PrivateKeyParameters(n, k, field, gp, P, S[1], h);
 
         // return key pair
         return new AsymmetricCipherKeyPair(pubKey, privKey);
