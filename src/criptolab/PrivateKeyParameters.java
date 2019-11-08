@@ -36,6 +36,9 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
 
     // the permutation used to compute the public generator matrix
     private Permutation P;
+    
+    // the permutation used to compute the systematic form of the matrix
+    private Permutation lpm;
 
     // the canonical check matrix of the code
     private GF2Matrix h;
@@ -46,7 +49,7 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
     
     
     public PrivateKeyParameters(int n, int k, GF2mField field,
-                                        PolynomialGF2mSmallM gp, Permutation P, GF2Matrix sInv, GF2Matrix h)
+                                        PolynomialGF2mSmallM gp, Permutation P, Permutation lpm, GF2Matrix sInv, GF2Matrix h)
     {
         super(true, null);
         this.k = k;
@@ -55,6 +58,7 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
         this.goppaPoly = gp;
         this.sInv = sInv;
         this.P = P;
+        this.lpm = lpm;
         this.h = h;
 
         PolynomialRingGF2m ring = new PolynomialRingGF2m(field, gp);
@@ -94,7 +98,9 @@ public class PrivateKeyParameters extends McElieceKeyParameters{
     public PolynomialGF2mSmallM[] getQInv() {
         return qInv;
     }
-    
-    
+
+    public Permutation getLpm() {
+        return lpm;
+    }
     
 }

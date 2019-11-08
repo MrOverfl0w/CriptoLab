@@ -87,6 +87,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
         // compute short systematic form of check matrix
         GoppaCode.MaMaPe mmp = GoppaCode.computeSystematicForm(h, random);
         GF2Matrix shortH = mmp.getSecondMatrix();
+        Permutation lpm = mmp.getPermutation();
 
         // compute short systematic form of generator matrix
         GF2Matrix shortG = (GF2Matrix) shortH.computeTranspose();
@@ -110,7 +111,7 @@ public class KeyGenerator implements AsymmetricCipherKeyPairGenerator {
 
         // generate keys
         PublicKeyParameters pubKey = new PublicKeyParameters(n, t, G);
-        PrivateKeyParameters privKey = new PrivateKeyParameters(n, k, field, gp, P, S[1], h);
+        PrivateKeyParameters privKey = new PrivateKeyParameters(n, k, field, gp, P, lpm, S[1], h);
 
         // return key pair
         return new AsymmetricCipherKeyPair(pubKey, privKey);

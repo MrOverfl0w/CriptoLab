@@ -164,11 +164,15 @@ public class Cipher implements MessageEncryptor{
         PolynomialGF2mSmallM gp = privKey.getGoppaPoly();
         GF2Matrix sInv = privKey.getSInv();
         Permutation p = privKey.getP();
+        Permutation lpm = privKey.getLpm();
         GF2Matrix h = privKey.getH();
         PolynomialGF2mSmallM[] qInv = privKey.getQInv();
 
+        // P = p * lpm
+        Permutation P = lpm.rightMultiply(p);
+        
         // compute P^-1
-        Permutation pInv = p.computeInverse();
+        Permutation pInv = P.computeInverse();
 
         // compute c P^-1
         GF2Vector cPInv = (GF2Vector)vec.multiply(pInv);
@@ -181,7 +185,7 @@ public class Cipher implements MessageEncryptor{
         GF2Vector mSG = (GF2Vector)cPInv.add(z);
 
         // multiply codeword with P1 and error vector with P
-        mSG = (GF2Vector)mSG.multiply(p);
+        mSG = (GF2Vector)mSG.multiply(lpm);
 
         // extract mS (last k columns of mSG)
         GF2Vector mS = mSG.extractRightVector(k);
